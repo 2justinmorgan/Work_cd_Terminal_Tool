@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # This is a dummy Bash script so GitHub displays "Bash" as the primary
 # language of this repo. 
 
