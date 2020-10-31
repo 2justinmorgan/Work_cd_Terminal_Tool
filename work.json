@@ -1,0 +1,29 @@
+{
+  "help_message": [
+    " ",
+    "  usage: work [option]",
+    " ",
+    "   This tool stores and executes commands as key-value pairs",
+    " ",
+    "   [option]:",
+    "      (none)   displays this message",
+    "      --help   displays this message",
+    "       [key]   execute the cmd value specified for 'key'",
+    "   get [key]   prints the cmd value specified for 'key'",
+    "   set [key]   sets previous cmd as the value for 'key'",
+    "    rm [key]   removes cmd 'key'",
+    " "
+  ],
+  "commands": [
+    "samplecmd",
+    "looper",
+    "aws-ssh-add",
+    "litegrade",
+    "0",
+    "cp-vpn",
+    "clean-clip",
+    "569",
+    "thesis",
+    "resume"
+  ]
+}

@@ -1,0 +1,10 @@
+echo "hello, this is a sample cmd";
+for ((i=0; i<5; i++)); do echo $i; done
+ssh-add /home/jmorga27/.ssh/LightsailDefaultKey-us-west-2.pem
+cd /home/jmorga27/Cal_Poly/Kurfess/litegrade;
+echo "this is the cmd with key '0'"
+. /home/jmorga27/Cal_Poly/cal_poly_vpn
+xclip -o > temp_f; cat temp_f | xclip; rm temp_f;
+cd /home/jmorga27/Cal_Poly/569/
+cd /home/jmorga27/Thesis
+cd /home/jmorga27/Job_Applications/Resumes/Justin
