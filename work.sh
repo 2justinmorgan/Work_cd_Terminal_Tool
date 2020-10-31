@@ -1,63 +1,76 @@
 
-options=("--help" "set" "show");
-
-function usage () {
+function print_help_message() {
+	jq .help_message[] ~/.work/work.json > message_output.temp;
+	while read line; do
+		line="${line:1:-1}";
+		line="${line/\\}";
+		echo "$line";
+	done < message_output.temp;
+	rm message_output.temp;
+	printf "%12s\n" "[key]:";
+	work get all;
 	echo;
-	echo -e "  Usage: work [option]\n";
-	echo -e "   This is a cd shortcut tool that allows you to save a directory";
-	echo -e "   for which work is regularly done, with the following options:";
-	echo;
-	echo -e "     [none]   changes directory to WORK_DIR"' via cd $WORK_DIR';
-	echo -e "     --help   displays this message";
-	echo -e "        set   sets WORK_DIR to current working dir"' via $(pwd)';
-	echo -e "       show   shows value of WORK_DIR\n";
 }
 
-function get_bashrc_work_dir () {
-	# only gets the last occurrence of "export WORK_DIR="
-	lines=($(cut -d':' -f1 <<< $(grep -n "export WORK_DIR=" ~/.bashrc)));
-	line=${lines[$((${#lines[@]}-1))]};
-	WORK_DIR=$(cut -d'"' -f2 <<< $(sed -n $line","$line"p" ~/.bashrc));
-}
-
-if [[ ! ${options[@]} =~ $@ ]]; then
-	echo -e "\n    \"$@\" invalid option";
-	usage;
-fi
-
-if [[ $@ == "--help" ]]; then
-	usage;
-fi
-
-if [[ $@ == "set" ]]; then
-	get_bashrc_work_dir;
-	pwd="\"$(pwd)\"";
-	l=${#pwd};
-
-	# insert "\" before every "/" in pwd
-	for ((i=0; i<$l; i++)); do
-		if [[ ${pwd:$i:1} == "/" ]]; then 
-			pwd=${pwd:0:$i}'\'${pwd:$i}; 
-			i=$((i+1)); 
-		fi; 
+function get_cmd_num() {
+	cmd_key=$1;
+	cmd_num=1;
+	i=0;
+	for cmd in ${all_cmd_keys_arr[@]}; do
+		i=$((i+1));
+		if [[ $cmd == $cmd_key ]]; then
+			cmd_num=$i;
+		fi
 	done
+	echo $cmd_num;
+}
 
-	sed -i "${line}s/.*/export WORK_DIR=$pwd/" ~/.bashrc;
-	WORK_DIR=$(cut -d'"' -f2 <<< $(sed -n $line","$line"p" ~/.bashrc));
-	echo set $WORK_DIR;
-fi
+function get_key_value() {
+	key=$1;
+	if [[ $key == "all" ]]; then
+		all_cmd_keys_arr=($(jq -r .commands[] ~/.work/work.json));
+		for ((cmd_num=1; cmd_num<=${#all_cmd_keys_arr[@]}; cmd_num++)); do
+			key=${all_cmd_keys_arr[$((cmd_num-1))]};
+			printf "%12s   %s\n" $key "$(sed -n ${cmd_num}p ~/.work/commands)";
+		done
+		return;
+	fi
+	cmd_num=$(get_cmd_num $cmd_key);
+	cmd=$(sed -n ${cmd_num}p ~/.work/commands);
+	printf "%12s   %s\n" $key "$cmd";
+}
 
-if [[ $@ == "show" ]]; then
-	get_bashrc_work_dir;
-	echo $WORK_DIR;
-fi
+function set_key_value() {
+	key=$1;
+	history_line=($(history 2 | sed -n 1p));
+	value="${history_line[@]:1}";
+	echo $value >> ~/.work/commands;
+	cat <<< $(jq ".commands |= . + [\"$key\"]" ~/.work/work.json) > ~/.work/work.json;
+}
 
-if [[ $# -le 0 ]]; then
-	get_bashrc_work_dir;
-	cd $WORK_DIR;
-fi
+function execute_cmd () {
+	cmd_key=$1;
+	all_cmd_keys_arr=($(jq -r .commands[] ~/.work/work.json));
 
+	cmd_num=$(get_cmd_num $cmd_key);
+	cmd=$(sed -n ${cmd_num}p ~/.work/commands);
+	history -s $cmd;
+	# tried to reference history instead of using eval
+	eval $cmd;
+}
 
-
-
+case $1 in 
+	"")
+		print_help_message;
+		;;
+	"get")
+		get_key_value $2;
+		;;
+	"set")
+		set_key_value $2;
+		;;
+	*)
+		execute_cmd $1;
+		;;
+esac
 
